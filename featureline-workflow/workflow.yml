@@ -2,7 +2,7 @@ schema_version: '1.0'
 workflow:
   id: featureline
   name: featureline - idea to merge, with Maestro E2E
-  version: 1.0.3
+  version: 1.0.4
   author: Yazan
   description: 'A production line for features - idea in, tested feature out. mode=feature (default): brief -> critic -> specify -> clarify
     -> decisions -> plan -> critic -> Maestro flows -> critic -> tasks -> analyze -> implement -> build
@@ -38,40 +38,9 @@ steps:
         - id: toolchain
           type: shell
           run: '".specify/extensions/featureline/scripts/setup-check.sh"'
-          continue_on_error: true
-        - id: toolchain-issues
-          type: if
-          condition: '{{ steps.toolchain.output.exit_code != 0 }}'
-          then:
-            - id: gate-toolchain
-              type: gate
-              message: Toolchain report. Every MISSING line has its fix command. Install what is missing,
-                then approve to re-check, or reject to stop.
-              show_file: .maestro/setup-report.txt
-              options:
-                - approve
-                - reject
-              on_reject: abort
-            - id: toolchain-recheck
-              type: shell
-              run: '".specify/extensions/featureline/scripts/setup-check.sh"'
         - id: app-ids
           type: shell
           run: '".specify/extensions/featureline/scripts/find-app-ids.sh"'
-          continue_on_error: true
-        - id: app-ids-issues
-          type: if
-          condition: '{{ steps.app-ids.output.exit_code != 0 }}'
-          then:
-            - id: gate-app-ids
-              type: gate
-              message: Check featureline-config.yml - app ids and build commands. Replace any SET_ME, adjust
-                the build commands if needed, then approve.
-              show_file: .specify/extensions/featureline/featureline-config.yml
-              options:
-                - approve
-                - reject
-              on_reject: abort
         - id: boot
           type: shell
           run: '".specify/extensions/featureline/scripts/boot-devices.sh"'
@@ -81,25 +50,6 @@ steps:
           run: echo 'Devices booted - building and installing the app on each now. First build can take
             5-15 minutes per platform.'; ".specify/extensions/featureline/scripts/build.sh"
           timeout: 3600
-        - id: smoke
-          type: shell
-          run: '".specify/extensions/featureline/scripts/smoke.sh"'
-          timeout: 600
-          continue_on_error: true
-        - id: smoke-failed
-          type: if
-          condition: '{{ steps.smoke.output.exit_code != 0 }}'
-          then:
-            - id: gate-smoke
-              type: gate
-              message: 'The smoke flow failed on at least one device. Most likely causes in order: app
-                not installed (check the build output), wrong app id in featureline-config.yml, Maestro
-                cannot see the device (restart it). Fix, then reject and run again - or approve to continue
-                anyway.'
-              options:
-                - approve
-                - reject
-              on_reject: abort
         - id: setup-flows
           type: shell
           run: '".specify/extensions/featureline/scripts/setup-flows.sh"'
@@ -114,16 +64,10 @@ steps:
             - id: draft-constitution
               command: speckit.featureline.draft-constitution
               integration: '{{ inputs.integration }}'
-            - id: gate-constitution
-              type: gate
-              message: Read the draft. Then in your agent run /speckit.constitution with its contents
-                (edit first if you want). The constitution is the one file you write yourself. Approve
-                once constitution.md is written.
-              show_file: .specify/memory/constitution-draft.md
-              options:
-                - approve
-                - reject
-              on_reject: abort
+        - id: smoke
+          type: shell
+          run: '".specify/extensions/featureline/scripts/smoke.sh"'
+          timeout: 600
       devices:
         - id: dev-boot
           type: shell
@@ -436,7 +380,8 @@ steps:
     type: shell
     run: |-
       case "{{ inputs.mode }}" in
-        setup)   echo "Setup done. Start a feature: specify workflow run featureline -i idea=\"...\""; echo "Each session: specify workflow run featureline -i mode=devices";;
+        setup)   if test -f .specify/memory/constitution.md && ! grep -q '\[PROJECT_NAME\]' .specify/memory/constitution.md; then :; else echo "Next: run /speckit.constitution with .specify/memory/constitution-draft.md (edit first if you want). Feature mode refuses to start without it."; fi
+                 echo "Setup done. Start a feature: specify workflow run featureline -i idea=\"...\""; echo "Each session: specify workflow run featureline -i mode=devices";;
         devices) echo "Devices booted, app built.";;
         *)       echo "READY TO MERGE. Branch: $(git branch --show-current). Merge it yourself - the pipeline never merges.";;
       esac

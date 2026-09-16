@@ -5,6 +5,11 @@ Versions: extension and workflow are released together under one tag.
 
 ## [Unreleased]
 
+## [1.0.4] - 2026-09-16
+
+### Changed
+- `mode=setup` has no gates. `setup-check.sh` and `find-app-ids.sh` fail the run instead of pausing (a `SET_ME` app id stops it; edit `featureline-config.yml` and run again, the file is kept). The constitution draft is still written but never applied; the final message tells you to run `/speckit.constitution` with it, and feature mode's preflight still refuses to start without a real `constitution.md`. The smoke flow runs last and fails the run if it fails, so flows and the draft are already in place when you re-run.
+
 ## [1.0.3] - 2026-09-16
 
 ### Changed
