@@ -5,6 +5,12 @@ Versions: extension and workflow are released together under one tag.
 
 ## [Unreleased]
 
+## [1.0.3] - 2026-09-16
+
+### Changed
+- `setup-check.sh` now only checks Spec Kit's `.specify/` layout indirectly (dropped - the script's own path already proves it) and the `package.json` test script; the Java/Xcode CLI tools/adb/Android emulator/AVD/Maestro CLI checks are gone. `boot-devices.sh`, `build.sh`, `smoke.sh` and `e2e.sh` still call those tools directly, so a missing one now surfaces as a plain command-not-found later in the run instead of a guided `MISSING` line at the first gate.
+- `mode=setup`'s toolchain and app-id gates now only pause when `setup-check.sh` / `find-app-ids.sh` actually found something to fix (`exit_code != 0`); a clean re-run skips both. Removed `setup-gate-build`, a pure approve-to-continue gate with nothing to review - its warning about build time is now an echo ahead of the build.
+
 ## [1.0.2] - 2026-09-16
 
 ### Changed

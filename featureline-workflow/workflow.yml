@@ -2,7 +2,7 @@ schema_version: '1.0'
 workflow:
   id: featureline
   name: featureline - idea to merge, with Maestro E2E
-  version: 1.0.2
+  version: 1.0.3
   author: Yazan
   description: 'A production line for features - idea in, tested feature out. mode=feature (default): brief -> critic -> specify -> clarify
     -> decisions -> plan -> critic -> Maestro flows -> critic -> tasks -> analyze -> implement -> build
@@ -39,46 +39,47 @@ steps:
           type: shell
           run: '".specify/extensions/featureline/scripts/setup-check.sh"'
           continue_on_error: true
-        - id: gate-toolchain
-          type: gate
-          message: Toolchain report. Every MISSING line has its fix command. Install what is missing,
-            then approve to re-check, or reject to stop.
-          show_file: .maestro/setup-report.txt
-          options:
-            - approve
-            - reject
-          on_reject: abort
-        - id: toolchain-recheck
-          type: shell
-          run: '".specify/extensions/featureline/scripts/setup-check.sh"'
+        - id: toolchain-issues
+          type: if
+          condition: '{{ steps.toolchain.output.exit_code != 0 }}'
+          then:
+            - id: gate-toolchain
+              type: gate
+              message: Toolchain report. Every MISSING line has its fix command. Install what is missing,
+                then approve to re-check, or reject to stop.
+              show_file: .maestro/setup-report.txt
+              options:
+                - approve
+                - reject
+              on_reject: abort
+            - id: toolchain-recheck
+              type: shell
+              run: '".specify/extensions/featureline/scripts/setup-check.sh"'
         - id: app-ids
           type: shell
           run: '".specify/extensions/featureline/scripts/find-app-ids.sh"'
           continue_on_error: true
-        - id: gate-app-ids
-          type: gate
-          message: Check featureline-config.yml - app ids and build commands. Replace any SET_ME, adjust
-            the build commands if needed, then approve.
-          show_file: .specify/extensions/featureline/featureline-config.yml
-          options:
-            - approve
-            - reject
-          on_reject: abort
+        - id: app-ids-issues
+          type: if
+          condition: '{{ steps.app-ids.output.exit_code != 0 }}'
+          then:
+            - id: gate-app-ids
+              type: gate
+              message: Check featureline-config.yml - app ids and build commands. Replace any SET_ME, adjust
+                the build commands if needed, then approve.
+              show_file: .specify/extensions/featureline/featureline-config.yml
+              options:
+                - approve
+                - reject
+              on_reject: abort
         - id: boot
           type: shell
           run: '".specify/extensions/featureline/scripts/boot-devices.sh"'
           timeout: 300
-        - id: setup-gate-build
-          type: gate
-          message: Devices are booted (see above). The next step builds and installs the app on each of
-            them - first build can take 5-15 minutes per platform. Approve to build.
-          options:
-            - approve
-            - reject
-          on_reject: abort
         - id: setup-build
           type: shell
-          run: '".specify/extensions/featureline/scripts/build.sh"'
+          run: echo 'Devices booted - building and installing the app on each now. First build can take
+            5-15 minutes per platform.'; ".specify/extensions/featureline/scripts/build.sh"
           timeout: 3600
         - id: smoke
           type: shell
