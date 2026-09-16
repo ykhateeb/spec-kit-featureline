@@ -19,7 +19,7 @@ From a GitHub release (recommended once published):
 
 ```bash
 cd your-app
-specify extension add featureline --from https://github.com/ykhateeb/spec-kit-featureline/releases/download/v1.0.4/featureline-ext-v1.0.4.zip
+specify extension add featureline --from https://github.com/ykhateeb/spec-kit-featureline/releases/download/v1.0.5/featureline-ext-v1.0.5.zip
 specify workflow  add featureline --from https://raw.githubusercontent.com/ykhateeb/spec-kit-featureline/main/featureline-workflow/workflow.yml
 ```
 
