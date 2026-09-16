@@ -75,7 +75,7 @@ Gates display these files. The user answers by editing them.
 ## Versioning and release
 
 - Any change under `featureline-ext/` or `featureline-workflow/` needs a version bump in **both** `extension.yml` and `workflow.yml`, plus a `## [x.y.z]` section in `CHANGELOG.md`. The CI PR guard enforces this, and `specify extension update` is version-driven, so an unbumped change never reaches installed copies.
-- To release, push `main` first, then a tag `vX.Y.Z` that matches the manifest version. CI zips each package with its manifest at the archive root and publishes the release with the changelog section as notes. It then commits `catalog/extensions.json` and `catalog/workflows.json`, pointing at the release assets, to `main`. Run `git pull` before your next push, and don't edit the catalogs by hand.
+- To release, push `main` first, then a tag `vX.Y.Z` that matches the manifest version. CI zips each package with its manifest at the archive root and publishes the release with the changelog section as notes. It then commits `catalog/extensions.json`, `catalog/workflows.json` and the README install URL, pointing at the release assets, to `main`. Run `git pull` before your next push, and don't edit the catalogs or that URL by hand.
 - Files matched by `featureline-ext/.extensionignore` are left out of the installed copy.
 
 ## Design invariants (from README; commands depend on them)

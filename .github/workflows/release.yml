@@ -51,8 +51,11 @@ jobs:
               s = re.sub(rf'("{url_key}": )"[^"]*"', rf'\g<1>"{rel}/{asset}"', s, count=1)
               s = re.sub(r'("updated_at": )"[^"]*"', rf'\g<1>"{now}"', s)
               open(path, "w").write(s)
+          s = open("README.md").read()
+          s = re.sub(r'releases/download/v\d+\.\d+\.\d+/featureline-ext-v\d+\.\d+\.\d+\.zip', f"releases/download/{tag}/featureline-ext-{tag}.zip", s)
+          open("README.md", "w").write(s)
           PY
           git diff --stat
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git diff --quiet || { git commit -am "chore: catalogs -> ${GITHUB_REF_NAME}" && git push origin main; }
+          git diff --quiet || { git commit -am "chore: catalogs + README -> ${GITHUB_REF_NAME}" && git push origin main; }
