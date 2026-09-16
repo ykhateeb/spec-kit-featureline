@@ -38,3 +38,6 @@ print("export BUILD_ANDROID=%s"   % shlex.quote(get('build','android','SPECKIT_F
 PY
 )"
 export CONFIG_FILE
+# Workflow shells don't load the user's shell rc, so ANDROID_HOME is often unset and Gradle fails with
+# "SDK location not found". Fall back to the Android Studio default location.
+[ -n "${ANDROID_HOME:-}" ] || { [ -n "${ANDROID_SDK_ROOT:-}" ] && export ANDROID_HOME="$ANDROID_SDK_ROOT"; } || { [ -d "$HOME/Library/Android/sdk" ] && export ANDROID_HOME="$HOME/Library/Android/sdk"; } || true

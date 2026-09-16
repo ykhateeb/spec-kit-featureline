@@ -5,6 +5,11 @@ Versions: extension and workflow are released together under one tag.
 
 ## [Unreleased]
 
+## [1.0.6] - 2026-09-16
+
+### Fixed
+- Android build in `mode=setup` failed with "SDK location not found" when `ANDROID_HOME` was only set in a shell rc file the workflow shell never loads (e.g. `.zshrc` while running fish). `config.sh` now falls back to `ANDROID_SDK_ROOT`, then `~/Library/Android/sdk`.
+
 ## [1.0.5] - 2026-09-16
 
 ### Added

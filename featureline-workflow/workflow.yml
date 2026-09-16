@@ -2,7 +2,7 @@ schema_version: '1.0'
 workflow:
   id: featureline
   name: featureline - idea to merge, with Maestro E2E
-  version: 1.0.5
+  version: 1.0.6
   author: Yazan
   description: 'A production line for features - idea in, tested feature out. mode=feature (default): brief -> critic -> specify -> clarify
     -> decisions -> plan -> critic -> Maestro flows -> critic -> tasks -> analyze -> implement -> build
