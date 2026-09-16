@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "updated_at": "2026-09-16T14:47:56Z",
+  "updated_at": "2026-09-16T14:53:32Z",
   "catalog_url": "https://raw.githubusercontent.com/ykhateeb/spec-kit-featureline/main/catalog/workflows.json",
   "workflows": {
     "featureline": {
@@ -8,8 +8,8 @@
       "name": "featureline - idea to merge, with Maestro E2E",
       "description": "Brief -> critic -> specify -> clarify -> decisions -> plan -> critic -> Maestro flows -> critic -> tasks -> analyze -> implement -> build -> E2E -> review. Five gates, three modes. Requires the featureline extension.",
       "author": "Yazan (@ykhateeb)",
-      "version": "1.0.5",
-      "url": "https://github.com/ykhateeb/spec-kit-featureline/releases/download/v1.0.5/featureline-workflow-v1.0.5.yml",
+      "version": "1.0.6",
+      "url": "https://github.com/ykhateeb/spec-kit-featureline/releases/download/v1.0.6/featureline-workflow-v1.0.6.yml",
       "tags": ["react-native", "maestro", "e2e", "gated", "idea-to-merge"]
     }
   }
