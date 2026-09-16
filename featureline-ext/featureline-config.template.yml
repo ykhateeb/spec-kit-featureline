@@ -1,0 +1,15 @@
+# featureline configuration
+# Copy to featureline-config.yml (same folder) and edit. setup mode writes it for you
+# if it is missing. Env overrides: SPECKIT_FEATURELINE_IOS_BUNDLE_ID, _ANDROID_PACKAGE,
+# _BUILD_IOS, _BUILD_ANDROID.
+ios:
+  bundle_id: "com.example.app"
+android:
+  package: "com.example.app"
+build:
+  # Release builds bundle the JS, so Maestro does not need Metro running.
+  ios: "npx expo run:ios --configuration Release --no-bundler"
+  android: "npx expo run:android --variant release --no-bundler"
+  # Bare React Native instead:
+  # ios: "npx react-native run-ios --mode Release --no-packager"
+  # android: "npx react-native run-android --mode release --no-packager"

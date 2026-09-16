@@ -1,0 +1,117 @@
+schema_version: '1.0'
+extension:
+  id: featureline
+  name: featureline
+  version: 1.0.0
+  description: A production line for features. Seven roles as commands - brief writer, three critics, technical decisions,
+    Maestro flow writer, spec reviewer - plus the build and E2E scripts. Pair with the featureline workflow for the full gated
+    pipeline.
+  author: Yazan
+  repository: https://github.com/yazan/spec-kit-featureline
+  license: MIT
+requires:
+  speckit_version: '>=1.0.0,<2.0.0'
+  tools:
+  - name: maestro
+    required: false
+    version: '>=1.39.0'
+  commands:
+  - speckit.specify
+  - speckit.clarify
+  - speckit.plan
+  - speckit.tasks
+  - speckit.analyze
+  - speckit.implement
+provides:
+  commands:
+  - name: speckit.featureline.write-brief
+    file: commands/speckit.featureline.write-brief.md
+    description: 'Interview about an idea and write the requirements brief (interview: / draft: / revise)'
+  - name: speckit.featureline.critique-brief
+    file: commands/speckit.featureline.critique-brief.md
+    description: Critique a brief before it becomes a spec
+  - name: speckit.featureline.decide-tech
+    file: commands/speckit.featureline.decide-tech.md
+    description: Technical decision record and plan input (apply <dir> to apply picks)
+  - name: speckit.featureline.critique-plan
+    file: commands/speckit.featureline.critique-plan.md
+    description: Check plan.md against constitution, decisions and spec
+  - name: speckit.featureline.write-flows
+    file: commands/speckit.featureline.write-flows.md
+    description: Write Maestro flows from the acceptance criteria, before the code
+  - name: speckit.featureline.critique-flows
+    file: commands/speckit.featureline.critique-flows.md
+    description: Check the flows are a faithful translation of the criteria
+  - name: speckit.featureline.review-spec
+    file: commands/speckit.featureline.review-spec.md
+    description: 'Run the flows and review the branch against the spec: READY / NOT READY'
+  - name: speckit.featureline.fix-code
+    file: commands/speckit.featureline.fix-code.md
+    description: Fix code after failing flows, a NOT READY review, or an analyze report
+  - name: speckit.featureline.draft-constitution
+    file: commands/speckit.featureline.draft-constitution.md
+    description: Draft a constitution starter from what the repo already does
+  scripts:
+  - name: featureline-build
+    file: scripts/build.sh
+    description: Build and install the app on every booted device
+    runtimes:
+    - bash
+  - name: featureline-e2e
+    file: scripts/e2e.sh
+    description: Run Maestro flows for one feature per platform; JUnit + summary
+    runtimes:
+    - bash
+  - name: featureline-boot-devices
+    file: scripts/boot-devices.sh
+    description: Boot the newest iPhone simulator and the first Android AVD
+    runtimes:
+    - bash
+  - name: featureline-setup-check
+    file: scripts/setup-check.sh
+    description: Toolchain report with fix commands
+    runtimes:
+    - bash
+  - name: featureline-find-app-ids
+    file: scripts/find-app-ids.sh
+    description: Detect app ids and build commands into featureline-config.yml
+    runtimes:
+    - bash
+  - name: featureline-smoke
+    file: scripts/smoke.sh
+    description: Prove Maestro -> device -> installed app
+    runtimes:
+    - bash
+  - name: featureline-setup-flows
+    file: scripts/setup-flows.sh
+    description: Create the shared _setup flows skeleton
+    runtimes:
+    - bash
+  - name: featureline-config-loader
+    file: scripts/config.sh
+    description: 'Sourced by the other scripts: loads featureline-config.yml with env overrides'
+    runtimes:
+    - bash
+  config:
+  - name: featureline-config.yml
+    template: featureline-config.template.yml
+    description: App ids and build commands for Maestro E2E (written by setup, editable)
+    required: true
+hooks:
+  after_plan:
+    command: speckit.featureline.critique-plan
+    optional: true
+    prompt: Run the plan critic against this plan?
+    description: Checks the plan against constitution, decisions and spec
+  after_implement:
+    command: speckit.featureline.review-spec
+    optional: true
+    prompt: Run the spec review (flows + criteria) now?
+    description: Runs Maestro flows and reviews the branch against every acceptance criterion
+tags:
+- workflow
+- react-native
+- maestro
+- e2e
+- review
+- qa

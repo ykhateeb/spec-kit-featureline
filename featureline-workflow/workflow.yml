@@ -1,0 +1,441 @@
+schema_version: '1.0'
+workflow:
+  id: featureline
+  name: featureline - idea to merge, with Maestro E2E
+  version: 1.0.0
+  author: Yazan
+  description: 'A production line for features - idea in, tested feature out. mode=feature (default): brief -> critic -> specify -> clarify
+    -> decisions -> plan -> critic -> Maestro flows -> critic -> tasks -> analyze -> implement -> build
+    -> E2E -> review, five human gates, two fix loops. mode=setup once per repo, mode=devices each session.
+    Every role is a command from the featureline extension - install it first.'
+requires:
+  speckit_version: '>=1.0.0'
+  integrations:
+    any:
+      - claude
+inputs:
+  mode:
+    type: string
+    default: feature
+    enum:
+      - feature
+      - setup
+      - devices
+    prompt: feature (default), setup (once per repo), or devices (boot + rebuild)
+  idea:
+    type: string
+    default: ''
+    prompt: 'For mode=feature: describe the feature in plain words'
+  integration:
+    type: string
+    default: claude
+steps:
+  - id: route
+    type: switch
+    expression: '{{ inputs.mode }}'
+    cases:
+      setup:
+        - id: toolchain
+          type: shell
+          run: '".specify/extensions/featureline/scripts/setup-check.sh"'
+          continue_on_error: true
+        - id: gate-toolchain
+          type: gate
+          message: Toolchain report. Every MISSING line has its fix command. Install what is missing,
+            then approve to re-check, or reject to stop.
+          show_file: .maestro/setup-report.txt
+          options:
+            - approve
+            - reject
+          on_reject: abort
+        - id: toolchain-recheck
+          type: shell
+          run: '".specify/extensions/featureline/scripts/setup-check.sh"'
+        - id: app-ids
+          type: shell
+          run: '".specify/extensions/featureline/scripts/find-app-ids.sh"'
+          continue_on_error: true
+        - id: gate-app-ids
+          type: gate
+          message: Check featureline-config.yml - app ids and build commands. Replace any SET_ME, adjust
+            the build commands if needed, then approve.
+          show_file: .specify/extensions/featureline/featureline-config.yml
+          options:
+            - approve
+            - reject
+          on_reject: abort
+        - id: boot
+          type: shell
+          run: '".specify/extensions/featureline/scripts/boot-devices.sh"'
+          timeout: 300
+        - id: setup-gate-build
+          type: gate
+          message: Devices are booted (see above). The next step builds and installs the app on each of
+            them - first build can take 5-15 minutes per platform. Approve to build.
+          options:
+            - approve
+            - reject
+          on_reject: abort
+        - id: setup-build
+          type: shell
+          run: '".specify/extensions/featureline/scripts/build.sh"'
+          timeout: 3600
+        - id: smoke
+          type: shell
+          run: '".specify/extensions/featureline/scripts/smoke.sh"'
+          timeout: 600
+          continue_on_error: true
+        - id: smoke-failed
+          type: if
+          condition: '{{ steps.smoke.output.exit_code != 0 }}'
+          then:
+            - id: gate-smoke
+              type: gate
+              message: 'The smoke flow failed on at least one device. Most likely causes in order: app
+                not installed (check the build output), wrong app id in featureline-config.yml, Maestro
+                cannot see the device (restart it). Fix, then reject and run again - or approve to continue
+                anyway.'
+              options:
+                - approve
+                - reject
+              on_reject: abort
+        - id: setup-flows
+          type: shell
+          run: '".specify/extensions/featureline/scripts/setup-flows.sh"'
+        - id: needs-constitution
+          type: shell
+          run: if test -f .specify/memory/constitution.md && ! grep -q '\[PROJECT_NAME\]' .specify/memory/constitution.md;
+            then echo written; else echo missing; fi
+        - id: constitution
+          type: if
+          condition: '{{ steps.needs-constitution.output.stdout | contains(''missing'') }}'
+          then:
+            - id: draft-constitution
+              command: speckit.featureline.draft-constitution
+              integration: '{{ inputs.integration }}'
+            - id: gate-constitution
+              type: gate
+              message: Read the draft. Then in your agent run /speckit.constitution with its contents
+                (edit first if you want). The constitution is the one file you write yourself. Approve
+                once constitution.md is written.
+              show_file: .specify/memory/constitution-draft.md
+              options:
+                - approve
+                - reject
+              on_reject: abort
+      devices:
+        - id: dev-boot
+          type: shell
+          run: '".specify/extensions/featureline/scripts/boot-devices.sh"'
+          timeout: 300
+        - id: dev-build
+          type: shell
+          run: '".specify/extensions/featureline/scripts/build.sh"'
+          timeout: 3600
+        - id: dev-smoke
+          type: shell
+          run: '".specify/extensions/featureline/scripts/smoke.sh"'
+          timeout: 600
+          continue_on_error: true
+        - id: dev-smoke-failed
+          type: if
+          condition: '{{ steps.dev-smoke.output.exit_code != 0 }}'
+          then:
+            - id: dev-gate-smoke
+              type: gate
+              message: 'The smoke flow failed on at least one device. Most likely causes in order: app
+                not installed (check the build output), wrong app id in featureline-config.yml, Maestro
+                cannot see the device (restart it). Fix, then reject and run again - or approve to continue
+                anyway.'
+              options:
+                - approve
+                - reject
+              on_reject: abort
+      feature:
+        - id: preflight
+          type: shell
+          run: 'test -d .specify/extensions/featureline || { echo ''Install the extension first: specify
+            extension add --dev <path>/featureline-ext''; exit 1; }; test -f .specify/memory/constitution.md
+            && ! grep -q ''\[PROJECT_NAME\]'' .specify/memory/constitution.md && test -f .specify/extensions/featureline/featureline-config.yml
+            || { echo ''Not ready. Run: specify workflow run featureline -i mode=setup''; exit 1; }'
+        - id: boot-for-feature
+          type: shell
+          run: '".specify/extensions/featureline/scripts/boot-devices.sh"'
+          timeout: 300
+        - id: interview
+          command: speckit.featureline.write-brief
+          integration: '{{ inputs.integration }}'
+          input:
+            args: 'interview: {{ inputs.idea }}'
+        - id: answer-questions
+          type: gate
+          message: Open specs/briefs/_interview.md and write your answers under "Your answers" (letters
+            are enough; "skip" uses the stated default). Approve when done.
+          show_file: specs/briefs/_interview.md
+          options:
+            - approve
+            - reject
+          on_reject: abort
+        - id: draft-brief
+          command: speckit.featureline.write-brief
+          integration: '{{ inputs.integration }}'
+          input:
+            args: 'draft: {{ inputs.idea }}'
+        - id: brief-review-cycle
+          type: do-while
+          condition: '{{ steps.gate-1-brief.output.choice == ''revise'' }}'
+          max_iterations: 3
+          steps:
+            - id: brief-critic
+              command: speckit.featureline.critique-brief
+              integration: '{{ inputs.integration }}'
+              input:
+                args: specs/briefs/_brief.md
+            - id: assemble-gate-1
+              type: shell
+              run: '{ cat specs/briefs/_brief-critique.md; echo; echo ''---''; echo; cat specs/briefs/_brief.md;
+                } > specs/briefs/_gate-1.md'
+            - id: gate-1-brief
+              type: gate
+              message: Gate 1 - the critique is on top, the brief below. "approve" to continue (edit specs/briefs/_brief.md
+                first if you want). "revise" lets the spec writer apply every row of the critique and
+                re-critique. "reject" stops.
+              show_file: specs/briefs/_gate-1.md
+              options:
+                - approve
+                - revise
+                - reject
+              on_reject: abort
+            - id: on-revise
+              type: if
+              condition: '{{ steps.gate-1-brief.output.choice == ''revise'' }}'
+              then:
+                - id: revise-brief
+                  command: speckit.featureline.write-brief
+                  integration: '{{ inputs.integration }}'
+                  input:
+                    args: revise
+        - id: read-brief
+          type: shell
+          run: cat specs/briefs/_brief.md
+        - id: specify
+          command: speckit.specify
+          integration: '{{ inputs.integration }}'
+          input:
+            args: '{{ steps.read-brief.output.stdout }}'
+        - id: feature-dir
+          type: shell
+          run: printf '%s' "$(basename "$(ls -td specs/[0-9]*/ | head -1)")"
+        - id: clarify-ask
+          command: speckit.clarify
+          integration: '{{ inputs.integration }}'
+          input:
+            args: Non-interactive mode. Do not ask questions in the terminal. Write up to 5 clarification
+              questions, each with 2-4 suggested options and an empty "Answer:" line, to specs/{{ steps.feature-dir.output.stdout
+              }}/clarify.md. Do not change spec.md yet.
+        - id: gate-2-clarify
+          type: gate
+          message: Gate 2 - answer every question in clarify.md on its "Answer:" line, then approve.
+          show_file: specs/{{ steps.feature-dir.output.stdout }}/clarify.md
+          options:
+            - approve
+            - reject
+          on_reject: abort
+        - id: clarify-apply
+          command: speckit.clarify
+          integration: '{{ inputs.integration }}'
+          input:
+            args: 'The user''s answers are in specs/{{ steps.feature-dir.output.stdout }}/clarify.md.
+              Integrate every answered question into spec.md exactly as you would after an interactive
+              session: add a Clarifications section and update the affected requirements and stories.
+              Ask nothing.'
+        - id: decisions
+          command: speckit.featureline.decide-tech
+          integration: '{{ inputs.integration }}'
+          input:
+            args: '{{ steps.feature-dir.output.stdout }}'
+        - id: gate-3-decisions
+          type: gate
+          message: Gate 3 - for every "You choose" row, add a "Pick" column with your choice. Delete the
+            row of any new dependency you do not want. Approve when done.
+          show_file: specs/{{ steps.feature-dir.output.stdout }}/decisions.md
+          options:
+            - approve
+            - reject
+          on_reject: abort
+        - id: apply-decisions
+          command: speckit.featureline.decide-tech
+          integration: '{{ inputs.integration }}'
+          input:
+            args: apply {{ steps.feature-dir.output.stdout }}
+        - id: plan
+          command: speckit.plan
+          integration: '{{ inputs.integration }}'
+          input:
+            args: Read the section "Ready-to-paste /speckit.plan input" in specs/{{ steps.feature-dir.output.stdout
+              }}/decisions.md and use it as the complete technical context for this plan. Do not run optional
+              extension hooks; the workflow runs the critic and the review as its own steps.
+        - id: plan-critic
+          command: speckit.featureline.critique-plan
+          integration: '{{ inputs.integration }}'
+          input:
+            args: '{{ steps.feature-dir.output.stdout }}'
+        - id: flows
+          command: speckit.featureline.write-flows
+          integration: '{{ inputs.integration }}'
+          input:
+            args: '{{ steps.feature-dir.output.stdout }}'
+        - id: flow-critic
+          command: speckit.featureline.critique-flows
+          integration: '{{ inputs.integration }}'
+          input:
+            args: '{{ steps.feature-dir.output.stdout }}'
+        - id: assemble-gate-3b
+          type: shell
+          run: D="specs/$(basename "$(ls -td specs/[0-9]*/ | head -1)")"; { echo '# Stage 4 report'; echo;
+            cat "$D/plan-critique.md"; echo; echo '---'; echo; cat "$D/flow-critique.md"; echo; echo '---';
+            echo; cat "$D/flows-report.md"; } > "$D/stage-4-report.md"
+        - id: gate-3b-flows
+          type: gate
+          message: 'Plan critique, flow critique, and the flow writer''s report, in that order. A FIX
+            FIRST verdict in either critique: fix plan.md or spec.md and the flows before approving, or
+            reject and start a new run from the spec. If "Needs a hook" lists anything, add the hook decision
+            to decisions.md now - it becomes an implement task. Otherwise approve.'
+          show_file: specs/{{ steps.feature-dir.output.stdout }}/stage-4-report.md
+          options:
+            - approve
+            - reject
+          on_reject: abort
+        - id: tasks-and-analyze
+          type: do-while
+          condition: '{{ steps.gate-4-analyze.output.choice == ''fix'' }}'
+          max_iterations: 3
+          steps:
+            - id: tasks
+              command: speckit.tasks
+              integration: '{{ inputs.integration }}'
+              input:
+                args: 'Also include: (1) for every screen, a task to add the testIDs listed for it in
+                  specs/{{ steps.feature-dir.output.stdout }}/testids.md; (2) a task for every placeholder
+                  file in .maestro/{{ steps.feature-dir.output.stdout }}/_setup/ and every row of the
+                  "Test hooks for Maestro" table in decisions.md; (3) a final task: run the p1 Maestro
+                  flows in .maestro/{{ steps.feature-dir.output.stdout }}/ on iOS and Android and make
+                  them pass.'
+            - id: analyze
+              command: speckit.analyze
+              integration: '{{ inputs.integration }}'
+            - id: gate-4-analyze
+              type: gate
+              message: Gate 4 - read the analyze report above. "approve" only if it is clean. "fix" lets
+                the agent correct the spec or plan (never tasks.md) and regenerate tasks.
+              options:
+                - approve
+                - fix
+                - reject
+              on_reject: abort
+            - id: fix-for-analyze
+              type: if
+              condition: '{{ steps.gate-4-analyze.output.choice == ''fix'' }}'
+              then:
+                - id: fix-spec-or-plan
+                  command: speckit.featureline.fix-code
+                  integration: '{{ inputs.integration }}'
+                  input:
+                    args: analyze {{ steps.feature-dir.output.stdout }}
+        - id: implement
+          command: speckit.implement
+          integration: '{{ inputs.integration }}'
+          input:
+            args: Do not run optional extension hooks; the workflow runs the critic and the review as
+              its own steps.
+        - id: post-implement
+          type: slot
+          name: 'Post-implementation checks (fill with an overlay: lint, typecheck)'
+        - id: unit-tests
+          type: shell
+          run: npm test --if-present
+          timeout: 1200
+          continue_on_error: true
+        - id: e2e-cycle
+          type: do-while
+          condition: '{{ steps.e2e-p1.output.exit_code != 0 }}'
+          max_iterations: 5
+          steps:
+            - id: build
+              type: shell
+              run: '".specify/extensions/featureline/scripts/build.sh"'
+              timeout: 3600
+            - id: e2e-p1
+              type: shell
+              run: '".specify/extensions/featureline/scripts/e2e.sh" "$(basename "$(ls -td specs/[0-9]*/
+                | head -1)")" p1'
+              timeout: 1800
+              continue_on_error: true
+            - id: on-e2e-fail
+              type: if
+              condition: '{{ steps.e2e-p1.output.exit_code != 0 }}'
+              then:
+                - id: gate-e2e
+                  type: gate
+                  message: p1 flows failed on at least one platform (or no device is booted - exit code
+                    2). Approve = the agent classifies the failure and fixes the CODE; flows are never
+                    edited. Reject = stop here.
+                  show_file: specs/{{ steps.feature-dir.output.stdout }}/maestro-summary.txt
+                  options:
+                    - approve
+                    - reject
+                  on_reject: abort
+                - id: fix-e2e
+                  command: speckit.featureline.fix-code
+                  integration: '{{ inputs.integration }}'
+                  input:
+                    args: e2e {{ steps.feature-dir.output.stdout }}
+        - id: pre-review
+          type: slot
+          name: Pre-review checks (fill with an overlay)
+        - id: review-cycle
+          type: do-while
+          condition: '{{ steps.gate-5-review.output.choice == ''fix'' }}'
+          max_iterations: 3
+          steps:
+            - id: review
+              command: speckit.featureline.review-spec
+              integration: '{{ inputs.integration }}'
+              input:
+                args: '{{ steps.feature-dir.output.stdout }}'
+            - id: gate-5-review
+              type: gate
+              message: Gate 5 - read review.md. "merge" if READY TO MERGE. "fix" sends the Missing / Partial
+                criteria and the unasked-for additions back to the agent (spec change -> reword spec.md
+                first, then "fix"). "reject" stops the run.
+              show_file: specs/{{ steps.feature-dir.output.stdout }}/review.md
+              options:
+                - merge
+                - fix
+                - reject
+              on_reject: abort
+            - id: on-fix
+              type: if
+              condition: '{{ steps.gate-5-review.output.choice == ''fix'' }}'
+              then:
+                - id: fix-review
+                  command: speckit.featureline.fix-code
+                  integration: '{{ inputs.integration }}'
+                  input:
+                    args: review {{ steps.feature-dir.output.stdout }}
+                - id: rebuild
+                  type: shell
+                  run: '".specify/extensions/featureline/scripts/build.sh"'
+                  timeout: 3600
+    default:
+      - id: bad-mode
+        type: shell
+        run: echo 'mode must be feature, setup or devices'; exit 1
+  - id: done
+    type: shell
+    run: |-
+      case "{{ inputs.mode }}" in
+        setup)   echo "Setup done. Start a feature: specify workflow run featureline -i idea=\"...\""; echo "Each session: specify workflow run featureline -i mode=devices";;
+        devices) echo "Devices booted, app built.";;
+        *)       echo "READY TO MERGE. Branch: $(git branch --show-current). Merge it yourself - the pipeline never merges.";;
+      esac
