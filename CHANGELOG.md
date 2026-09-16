@@ -16,3 +16,5 @@ Versions: extension and workflow are released together under one tag.
 
 ### Fixed
 - Setup re-check no longer fails on a fresh project: the constitution line is informational, since setup mode drafts it in its last step.
+- Repo URLs in README and catalogs now point at `ykhateeb/spec-kit-featureline`.
+- README: `specify workflow validate` does not exist; use `specify workflow info`. Verified install, tests and validator against Spec Kit v1.0.7.

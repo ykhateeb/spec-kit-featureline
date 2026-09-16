@@ -19,24 +19,24 @@ From a GitHub release (recommended once published):
 
 ```bash
 cd your-app
-specify extension add featureline --from https://github.com/ykhateeb/featureline/releases/download/v1.0.0/featureline-ext-v1.0.0.zip
-specify workflow  add featureline --from https://raw.githubusercontent.com/ykhateeb/featureline/main/featureline-workflow/workflow.yml
+specify extension add featureline --from https://github.com/ykhateeb/spec-kit-featureline/releases/download/v1.0.0/featureline-ext-v1.0.0.zip
+specify workflow  add featureline --from https://raw.githubusercontent.com/ykhateeb/spec-kit-featureline/main/featureline-workflow/workflow.yml
 ```
 
 From a clone, for development:
 
 ```bash
-git clone https://github.com/ykhateeb/featureline ~/tools/featureline
+git clone https://github.com/ykhateeb/spec-kit-featureline ~/tools/spec-kit-featureline
 cd your-app
-specify extension add --dev ~/tools/featureline/featureline-ext
-specify workflow  add --dev ~/tools/featureline/featureline-workflow
+specify extension add --dev ~/tools/spec-kit-featureline/featureline-ext
+specify workflow  add --dev ~/tools/spec-kit-featureline/featureline-workflow
 ```
 
 As a team install source:
 
 ```bash
-specify extension catalog add https://raw.githubusercontent.com/ykhateeb/featureline/main/catalog/extensions.json --name featureline --install-allowed
-specify workflow  catalog add https://raw.githubusercontent.com/ykhateeb/featureline/main/catalog/workflows.json
+specify extension catalog add https://raw.githubusercontent.com/ykhateeb/spec-kit-featureline/main/catalog/extensions.json --name featureline --install-allowed
+specify workflow  catalog add https://raw.githubusercontent.com/ykhateeb/spec-kit-featureline/main/catalog/workflows.json
 specify extension add featureline
 specify workflow  add featureline
 ```
@@ -45,7 +45,7 @@ Either way, then:
 
 ```bash
 specify extension list                # featureline · 9 commands · 2 hooks
-specify workflow  validate featureline
+specify workflow  info featureline
 ```
 
 Restart your agent so it sees the new commands. Extension first, always -

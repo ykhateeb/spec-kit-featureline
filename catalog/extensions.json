@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "updated_at": "2026-09-16T00:00:00Z",
-  "catalog_url": "https://raw.githubusercontent.com/ykhateeb/featureline/main/catalog/extensions.json",
+  "catalog_url": "https://raw.githubusercontent.com/ykhateeb/spec-kit-featureline/main/catalog/extensions.json",
   "extensions": {
     "featureline": {
       "name": "featureline",
@@ -9,10 +9,10 @@
       "description": "A production line for features. Brief writer, three critics, technical decisions, Maestro flow writer and spec reviewer as commands, plus build and E2E scripts. Pair with the featureline workflow for the gated pipeline.",
       "author": "Yazan (@ykhateeb)",
       "version": "1.0.0",
-      "download_url": "https://github.com/ykhateeb/featureline/releases/download/v1.0.0/featureline-ext-v1.0.0.zip",
-      "repository": "https://github.com/ykhateeb/featureline",
-      "documentation": "https://github.com/ykhateeb/featureline/blob/main/README.md",
-      "changelog": "https://github.com/ykhateeb/featureline/blob/main/CHANGELOG.md",
+      "download_url": "https://github.com/ykhateeb/spec-kit-featureline/releases/download/v1.0.0/featureline-ext-v1.0.0.zip",
+      "repository": "https://github.com/ykhateeb/spec-kit-featureline",
+      "documentation": "https://github.com/ykhateeb/spec-kit-featureline/blob/main/README.md",
+      "changelog": "https://github.com/ykhateeb/spec-kit-featureline/blob/main/CHANGELOG.md",
       "license": "MIT",
       "category": "process",
       "effect": "read-write",

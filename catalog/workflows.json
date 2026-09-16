@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "updated_at": "2026-09-16T00:00:00Z",
-  "catalog_url": "https://raw.githubusercontent.com/ykhateeb/featureline/main/catalog/workflows.json",
+  "catalog_url": "https://raw.githubusercontent.com/ykhateeb/spec-kit-featureline/main/catalog/workflows.json",
   "workflows": {
     "featureline": {
       "id": "featureline",
@@ -9,7 +9,7 @@
       "description": "Brief -> critic -> specify -> clarify -> decisions -> plan -> critic -> Maestro flows -> critic -> tasks -> analyze -> implement -> build -> E2E -> review. Five gates, three modes. Requires the featureline extension.",
       "author": "Yazan (@ykhateeb)",
       "version": "1.0.0",
-      "url": "https://raw.githubusercontent.com/ykhateeb/featureline/main/featureline-workflow/workflow.yml",
+      "url": "https://raw.githubusercontent.com/ykhateeb/spec-kit-featureline/main/featureline-workflow/workflow.yml",
       "tags": ["react-native", "maestro", "e2e", "gated", "idea-to-merge"]
     }
   }
