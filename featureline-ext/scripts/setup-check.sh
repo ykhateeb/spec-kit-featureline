@@ -17,7 +17,13 @@ if test -f .specify/memory/constitution.md && ! grep -q '\[PROJECT_NAME\]' .spec
 else
   say "later    constitution written (setup mode drafts it in its last step)"
 fi
-chk "package.json test script"          "grep -q '\"test\"' package.json" "add a test script to package.json"
+# Test script: added automatically when package.json has none (jest if installed, else a no-op placeholder).
+HAS_TEST="node -e \"process.exit(require('./package.json').scripts?.test ? 0 : 1)\""
+if test -f package.json && ! bash -c "$HAS_TEST" >/dev/null 2>&1; then
+  if test -x node_modules/.bin/jest; then T=jest; else T="echo 'no unit tests yet'"; fi
+  npm pkg set "scripts.test=$T" >/dev/null 2>&1 && say "added    package.json test script: $T"
+fi
+chk "package.json test script"          "$HAS_TEST" "add a test script to package.json"
 chk "Maestro CLI"                        "command -v maestro" "curl -Ls https://get.maestro.mobile.dev | bash  (then restart the shell)"
 chk "Java"                               "command -v java" "brew install openjdk@17"
 if [ "$(uname)" = Darwin ]; then

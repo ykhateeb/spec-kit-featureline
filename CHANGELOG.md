@@ -5,6 +5,14 @@ Versions: extension and workflow are released together under one tag.
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-09-16
+
+### Changed
+- Setup adds a `test` script to `package.json` when there isn't one (`jest` if installed, otherwise a no-op placeholder) instead of stopping with MISSING.
+
+### Fixed
+- `extension.yml` repository URL now points at `ykhateeb/spec-kit-featureline`.
+
 ## [1.0.0] - 2026-09-16
 
 ### Added
