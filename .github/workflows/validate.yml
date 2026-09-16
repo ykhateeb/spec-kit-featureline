@@ -29,9 +29,9 @@ jobs:
       - name: Real install with the Spec Kit CLI
         run: |
           mkdir /tmp/proj && cd /tmp/proj && git init -q
-          specify init . --ai claude --no-git --ignore-agent-tools
+          specify init . --integration claude --ignore-agent-tools --non-interactive --force
           specify extension add --dev "$GITHUB_WORKSPACE/featureline-ext"
           specify extension list
           test -f .specify/extensions/featureline/featureline-config.template.yml
           specify workflow add --dev "$GITHUB_WORKSPACE/featureline-workflow"
-          specify workflow validate featureline
+          specify workflow info featureline

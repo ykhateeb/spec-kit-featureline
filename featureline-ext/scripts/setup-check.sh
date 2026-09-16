@@ -10,7 +10,7 @@ chk() { # label, test-cmd, fix
 }
 say "== featureline setup check ($(date +%F))"
 chk "Spec Kit project (.specify/)"      "test -d .specify" \
-    "uvx --from git+https://github.com/github/spec-kit.git specify init . --ai claude"
+    "uvx --from git+https://github.com/github/spec-kit.git specify init . --integration claude"
 # Constitution is drafted at the end of setup mode, so it is reported but never counted as missing.
 if test -f .specify/memory/constitution.md && ! grep -q '\[PROJECT_NAME\]' .specify/memory/constitution.md; then
   say "ok       constitution written"

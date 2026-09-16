@@ -143,7 +143,7 @@ specify extension add --dev ./featureline-ext --force   # reinstall after editin
 ```
 
 CI runs the same validator plus a real `specify extension add` and
-`specify workflow validate` on every pull request.
+`specify workflow add` + `info` on every pull request.
 
 ## Release
 
