@@ -11,6 +11,7 @@ CONFIG_TEMPLATE="$EXT_DIR/featureline-config.template.yml"
 eval "$(python3 - "$CONFIG_TEMPLATE" "$CONFIG_FILE" "$CONFIG_LOCAL" <<'PY'
 import sys, os, shlex
 def load(p):
+    if not os.path.exists(p): return {}
     try:
         import yaml
         return yaml.safe_load(open(p)) or {}
@@ -24,8 +25,6 @@ def load(p):
             elif sec and ':' in s:
                 k, v = s.strip().split(':',1); d[sec][k.strip()] = v.strip().strip('"').strip("'")
         return d
-    except FileNotFoundError:
-        return {}
 cfg = {}
 for p in sys.argv[1:]:
     for sec, vals in load(p).items():

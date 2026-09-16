@@ -21,10 +21,13 @@ else
 fi
 cat > "$ENV" <<EOT
 # Written by featureline-setup. Edit freely - it is never overwritten.
-IOS_BUNDLE_ID="${ios:-SET_ME}"
-ANDROID_PACKAGE="${and:-SET_ME}"
-BUILD_IOS="$bi"
-BUILD_ANDROID="$ba"
+ios:
+  bundle_id: "${ios:-SET_ME}"
+android:
+  package: "${and:-SET_ME}"
+build:
+  ios: "$bi"
+  android: "$ba"
 EOT
 echo "wrote $ENV:"; cat "$ENV"
 grep -q SET_ME "$ENV" && { echo "!! an app id was not found - edit $ENV before building"; exit 1; }

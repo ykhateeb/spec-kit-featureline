@@ -2,7 +2,7 @@ schema_version: '1.0'
 extension:
   id: featureline
   name: featureline
-  version: 1.0.1
+  version: 1.0.2
   description: A production line for features. Seven roles as commands - brief writer, three critics, technical decisions,
     Maestro flow writer, spec reviewer - plus the build and E2E scripts. Pair with the featureline workflow for the full gated
     pipeline.

@@ -5,6 +5,12 @@ Versions: extension and workflow are released together under one tag.
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-09-16
+
+### Fixed
+- `config.sh` no longer crashes when PyYAML is missing and `featureline-config.local.yml` doesn't exist. The fallback parser ran inside `except ImportError`, so the sibling `except FileNotFoundError` never caught the missing file; every build/smoke script then died on an unbound `BUILD_IOS`.
+- `find-app-ids.sh` writes `featureline-config.yml` as YAML sections (`ios.bundle_id`, `build.ios`, ...) instead of shell `KEY="value"` lines that `config.sh` couldn't read.
+
 ## [1.0.1] - 2026-09-16
 
 ### Changed
