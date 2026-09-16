@@ -12,7 +12,10 @@ if xcrun simctl list devices booted 2>/dev/null | grep -q Booted; then
   xcrun simctl listapps booted | grep -q "$IOS_BUNDLE_ID" || { echo "iOS: $IOS_BUNDLE_ID not installed after build"; exit 1; }
   built=1
 fi
-if adb devices 2>/dev/null | awk 'NR>1 && $2=="device"' | grep -q .; then
+# Pin adb to ANDROID_SERIAL if it's online, else the first online device; a stale "offline" entry makes bare adb fail with "more than one device".
+ANDROID_SERIAL=$(adb devices 2>/dev/null | awk -v s="${ANDROID_SERIAL:-}" 'NR>1 && $2=="device" && (s=="" || $1==s){print $1; exit}' || true)
+if [ -n "$ANDROID_SERIAL" ]; then
+  export ANDROID_SERIAL
   echo "== build Android: $BUILD_ANDROID"
   bash -c "$BUILD_ANDROID"
   adb shell pm list packages | grep -q "$ANDROID_PACKAGE" || { echo "Android: $ANDROID_PACKAGE not installed after build"; exit 1; }

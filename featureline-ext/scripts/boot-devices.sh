@@ -17,6 +17,7 @@ if command -v adb >/dev/null; then
     if [ -n "$avd" ]; then
       nohup emulator -avd "$avd" -no-snapshot-load >/dev/null 2>&1 &
       adb wait-for-device
+      for i in $(seq 1 30); do export ANDROID_SERIAL=$(adb devices | awk 'NR>1 && $2=="device"{print $1; exit}'); [ -n "$ANDROID_SERIAL" ] && break; sleep 2; done
       for i in $(seq 1 60); do [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = 1 ] && break; sleep 2; done
       echo "android: booted $avd"
     else

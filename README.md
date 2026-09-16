@@ -152,11 +152,12 @@ CI runs the same validator plus a real `specify extension add` and
    Every content change needs a bump - `specify extension update` is
    version-driven, so an unbumped change never reaches installed copies.
    CI refuses a PR that touches `featureline-ext/` without one.
-2. `git tag v1.0.1 && git push --tags`.
+2. Push `main` first, then the tag: `git push && git tag vX.Y.Z && git push --tags`.
 3. CI checks the tag matches the manifest, zips both packages with the
    manifest at the archive root, and publishes a GitHub Release with the
    changelog section as notes.
-4. Update `download_url` and `version` in `catalog/extensions.json`.
+4. CI then commits `catalog/extensions.json` and `catalog/workflows.json`
+   pointing at the release to `main`. Run `git pull` before your next push.
 
 To list on the community catalog, open an
 [extension submission](https://github.com/github/spec-kit/issues/new?template=extension_submission.yml)

@@ -7,8 +7,13 @@ Versions: extension and workflow are released together under one tag.
 
 ## [1.0.2] - 2026-09-16
 
+### Changed
+- Release CI updates `catalog/extensions.json` and `catalog/workflows.json` to the new tag, so `specify extension update` / `specify workflow update` see it. The workflow catalog now points at the pinned release asset instead of `main`.
+
 ### Fixed
 - `config.sh` no longer crashes when PyYAML is missing and `featureline-config.local.yml` doesn't exist. The fallback parser ran inside `except ImportError`, so the sibling `except FileNotFoundError` never caught the missing file; every build/smoke script then died on an unbound `BUILD_IOS`.
+- `build.sh` and `boot-devices.sh` pin `ANDROID_SERIAL` to the first online device; a stale `offline` emulator made bare `adb shell` fail with "more than one device/emulator".
+- `e2e.sh` runs without a tag under macOS `/bin/bash` 3.2, where an empty array under `set -u` is an unbound variable.
 - `find-app-ids.sh` writes `featureline-config.yml` as YAML sections (`ios.bundle_id`, `build.ios`, ...) instead of shell `KEY="value"` lines that `config.sh` couldn't read.
 
 ## [1.0.1] - 2026-09-16

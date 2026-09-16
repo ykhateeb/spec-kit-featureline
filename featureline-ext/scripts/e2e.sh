@@ -24,7 +24,7 @@ TAGARG=()
 run_platform() {
   local platform="$1" app_id="$2" device="$3"
   echo "== $platform ($device) tag=${TAG:-all}" | tee -a "$SUMMARY"
-  if maestro --device "$device" test -e APP_ID="$app_id" "${TAGARG[@]}" \
+  if maestro --device "$device" test -e APP_ID="$app_id" ${TAGARG[@]+"${TAGARG[@]}"} \
        --format junit --output "$OUT/maestro-$platform.xml" "$FLOWS" >> "$SUMMARY" 2>&1; then
     echo "PASS $platform" | tee -a "$SUMMARY"
   else
@@ -34,7 +34,7 @@ run_platform() {
 }
 
 IOS_DEV="$(xcrun simctl list devices booted 2>/dev/null | grep -oE '[0-9A-F-]{36}' | head -1 || true)"
-AND_DEV="$(adb devices 2>/dev/null | awk 'NR>1 && $2=="device"{print $1; exit}' || true)"
+AND_DEV="$(adb devices 2>/dev/null | awk -v s="${ANDROID_SERIAL:-}" 'NR>1 && $2=="device" && (s=="" || $1==s){print $1; exit}' || true)"
 
 [ -n "$IOS_DEV" ] && run_platform ios "$IOS_BUNDLE_ID" "$IOS_DEV"
 [ -n "$AND_DEV" ] && run_platform android "$ANDROID_PACKAGE" "$AND_DEV"

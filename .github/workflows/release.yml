@@ -32,3 +32,27 @@ jobs:
         with:
           files: dist/*.zip, dist/*.yml
           body_path: dist/notes.md
+      # `specify extension update` / `workflow update` only read the catalogs, so a release
+      # is invisible to installed copies until these point at it.
+      - name: Point catalogs at this release
+        run: |
+          git fetch origin main && git checkout main
+          python3 - "${GITHUB_REF_NAME}" <<'PY'
+          import re, sys, datetime
+          tag = sys.argv[1]; v = tag[1:]
+          now = datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+          rel = f"https://github.com/${{ github.repository }}/releases/download/{tag}"
+          for path, url_key, asset in [
+              ("catalog/extensions.json", "download_url", f"featureline-ext-{tag}.zip"),
+              ("catalog/workflows.json", "url", f"featureline-workflow-{tag}.yml"),
+          ]:
+              s = open(path).read()
+              s = re.sub(r'("version": )"\d+\.\d+\.\d+"', rf'\g<1>"{v}"', s, count=1)
+              s = re.sub(rf'("{url_key}": )"[^"]*"', rf'\g<1>"{rel}/{asset}"', s, count=1)
+              s = re.sub(r'("updated_at": )"[^"]*"', rf'\g<1>"{now}"', s)
+              open(path, "w").write(s)
+          PY
+          git diff --stat
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git diff --quiet || { git commit -am "chore: catalogs -> ${GITHUB_REF_NAME}" && git push origin main; }
