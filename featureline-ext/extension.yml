@@ -2,7 +2,7 @@ schema_version: '1.0'
 extension:
   id: featureline
   name: featureline
-  version: 1.0.4
+  version: 1.0.5
   description: A production line for features. Seven roles as commands - brief writer, three critics, technical decisions,
     Maestro flow writer, spec reviewer - plus the build and E2E scripts. Pair with the featureline workflow for the full gated
     pipeline.
@@ -85,6 +85,11 @@ provides:
   - name: featureline-setup-flows
     file: scripts/setup-flows.sh
     description: Create the shared _setup flows skeleton
+    runtimes:
+    - bash
+  - name: featureline-log
+    file: scripts/log.sh
+    description: 'Wraps setup-mode scripts: also appends their output to .maestro/setup.log'
     runtimes:
     - bash
   - name: featureline-config-loader

@@ -2,7 +2,7 @@ schema_version: '1.0'
 workflow:
   id: featureline
   name: featureline - idea to merge, with Maestro E2E
-  version: 1.0.4
+  version: 1.0.5
   author: Yazan
   description: 'A production line for features - idea in, tested feature out. mode=feature (default): brief -> critic -> specify -> clarify
     -> decisions -> plan -> critic -> Maestro flows -> critic -> tasks -> analyze -> implement -> build
@@ -37,22 +37,21 @@ steps:
       setup:
         - id: toolchain
           type: shell
-          run: '".specify/extensions/featureline/scripts/setup-check.sh"'
+          run: '".specify/extensions/featureline/scripts/log.sh" ".specify/extensions/featureline/scripts/setup-check.sh"'
         - id: app-ids
           type: shell
-          run: '".specify/extensions/featureline/scripts/find-app-ids.sh"'
+          run: '".specify/extensions/featureline/scripts/log.sh" ".specify/extensions/featureline/scripts/find-app-ids.sh"'
         - id: boot
           type: shell
-          run: '".specify/extensions/featureline/scripts/boot-devices.sh"'
+          run: '".specify/extensions/featureline/scripts/log.sh" ".specify/extensions/featureline/scripts/boot-devices.sh"'
           timeout: 300
         - id: setup-build
           type: shell
-          run: echo 'Devices booted - building and installing the app on each now. First build can take
-            5-15 minutes per platform.'; ".specify/extensions/featureline/scripts/build.sh"
+          run: '".specify/extensions/featureline/scripts/log.sh" ".specify/extensions/featureline/scripts/build.sh"'
           timeout: 3600
         - id: setup-flows
           type: shell
-          run: '".specify/extensions/featureline/scripts/setup-flows.sh"'
+          run: '".specify/extensions/featureline/scripts/log.sh" ".specify/extensions/featureline/scripts/setup-flows.sh"'
         - id: needs-constitution
           type: shell
           run: if test -f .specify/memory/constitution.md && ! grep -q '\[PROJECT_NAME\]' .specify/memory/constitution.md;
@@ -66,7 +65,7 @@ steps:
               integration: '{{ inputs.integration }}'
         - id: smoke
           type: shell
-          run: '".specify/extensions/featureline/scripts/smoke.sh"'
+          run: '".specify/extensions/featureline/scripts/log.sh" ".specify/extensions/featureline/scripts/smoke.sh"'
           timeout: 600
       devices:
         - id: dev-boot

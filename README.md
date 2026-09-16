@@ -37,9 +37,11 @@ As a team install source:
 ```bash
 specify extension catalog add https://raw.githubusercontent.com/ykhateeb/spec-kit-featureline/main/catalog/extensions.json --name featureline --install-allowed
 specify workflow  catalog add https://raw.githubusercontent.com/ykhateeb/spec-kit-featureline/main/catalog/workflows.json
-specify extension add featureline
+specify extension add featureline     # add --force if a --dev or --from copy is already installed
 specify workflow  add featureline
 ```
+
+Later releases: `specify extension update featureline` and `specify workflow update featureline`.
 
 Either way, then:
 
@@ -59,6 +61,11 @@ specify workflow run featureline -i mode=devices        # each session: boot sim
 specify workflow run featureline -i idea="…"            # each feature
 specify workflow resume <run_id>                        # after closing the terminal
 ```
+
+Shell steps print nothing until they finish, and setup's first build takes
+5-15 minutes per platform. Watch setup live from another terminal with
+`tail -f .maestro/setup.log`: every setup script's output, with start time,
+exit code and duration.
 
 Gates prompt in the terminal and show the file to review.
 
@@ -106,7 +113,7 @@ after `/speckit.plan`, review after `/speckit.implement`.
 
 Scripts install to `.specify/extensions/featureline/scripts/`:
 `build.sh`, `e2e.sh <feature> [tag]`, `boot-devices.sh`, `smoke.sh`,
-`setup-check.sh`, `find-app-ids.sh`, `setup-flows.sh`.
+`setup-check.sh`, `find-app-ids.sh`, `setup-flows.sh`, `log.sh <script>`.
 
 Configuration lives in `.specify/extensions/featureline/featureline-config.yml`
 (app ids, build commands). Setup writes it; edit it freely. A

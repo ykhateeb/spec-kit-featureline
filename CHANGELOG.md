@@ -5,6 +5,11 @@ Versions: extension and workflow are released together under one tag.
 
 ## [Unreleased]
 
+## [1.0.5] - 2026-09-16
+
+### Added
+- `mode=setup` logs to `.maestro/setup.log`. Spec Kit's shell steps capture output and show nothing while they run, so a 15-minute build looked hung. Each setup script now runs through the new `log.sh`, which appends its output plus start time, exit code and duration to the log while keeping stdout and the exit code the workflow reads. Watch it with `tail -f .maestro/setup.log`.
+
 ## [1.0.4] - 2026-09-16
 
 ### Changed
